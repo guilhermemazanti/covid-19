@@ -132,19 +132,20 @@ def estimParams(db):
     if cases.sum() >= 100 and dates.size >= 10:
       countryName = db[db.GeoId==code]["Countries and territories"].values[0]
       A, a, tau = findBestTanh(db, code)
-      params[code] = (countryName, dates[0], A, a, tau)
+      params[code] = (countryName, cases.sum(), dates[0], A, a, tau)
   return params
 
 def saveParams(params, filename):
   with open(filename, "w") as file:
-    file.write("Country code,Country name,Estimation of total number of cases,"
+    file.write("Country code,Country name,Total cases today,"
+               "Estimate of final number of cases,"
                "Estimate of number of cases tomorrow,"
                "Estimate of number of cases in 3 days,"
                "Estimate of number of cases in 7 days,"
                "Number of days for doubling,Number of days until inflection,"
                "Inflection date\n")
     for code in params:
-      countryName, date0, A, a, tau = params[code]
+      countryName, totalCases, date0, A, a, tau = params[code]
       nbDouble = np.log(2)/a
       time1Days = (TODAY - date0).days + 1
       cases1Days = model(time1Days, A, a, tau)
@@ -152,8 +153,8 @@ def saveParams(params, filename):
       cases3Days = model(time3Days, A, a, tau)
       time7Days = (TODAY - date0).days + 7
       cases7Days = model(time7Days, A, a, tau) #A * (np.tanh(a*(time7Days - tau)) + 1) / 2
-      file.write("{:s},{:s},{:d},{:d},{:d},{:d},{:.2f},{:d},{:s}\n".format(\
-                 code, countryName,\
+      file.write("{:s},{:s},{:d},{:d},{:d},{:d},{:d},{:.2f},{:d},{:s}\n".format(\
+                 code, countryName, totalCases,\
                  int(A), int(cases1Days), int(cases3Days), int(cases7Days),\
                  nbDouble, int(tau+0.5),\
                  (date0+timedelta(int(tau+0.5))).isoformat()))
@@ -238,7 +239,7 @@ def plotTotalCasesAndBestTanh(db, code, future = 0, logScale = False):
   totCases = model(t, A, a, tau) # A * (np.tanh(a*(t - tau)) + 1) / 2
   ax.plot(dates, cases.cumsum(), label="Observed", lw=2.75)
   ax.plot([dates[0] + timedelta(int(ti)) for ti in t], totCases,\
-           label="Estimation", lw=1.25)
+           label="Estimate", lw=1.25)
   for text in ax.get_xticklabels():
     text.set_rotation(45)
   ax.set_xlabel("Date")
@@ -265,7 +266,7 @@ if __name__=="__main__":
   db = pd.read_excel(filename + ".xlsx", keep_default_na = False)
   
   #countries = ["CN", "KR", "FR", "DE", "IT", "UK", "AT", "US", "BR", "AR", "AU"]
-  countries = ["CN", "FR", "BR", "US", "IT"]
+  countries = ["CN", "FR", "BR", "US", "IT", "KR"]
   plotTotalCasesByDate(db, countries, logScale = True)
   plotTotalCasesByFirstDay(db, countries, logScale = True)
   plotBestTanhByFirstDay(db, countries, logScale = True)
@@ -274,5 +275,6 @@ if __name__=="__main__":
   plotTotalCasesAndBestTanh(db, "US", future=7, logScale = False)
   plotTotalCasesAndBestTanh(db, "CN", future=7, logScale = False)
   plotTotalCasesAndBestTanh(db, "IT", future=7, logScale = False)
+  plotTotalCasesAndBestTanh(db, "KR", future=7, logScale = False)
   params = estimParams(db)
   saveParams(params, filename + ".csv")
