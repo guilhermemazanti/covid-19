@@ -51,8 +51,13 @@ if __name__=="__main__":
   cp.plotCountry("IT")
   cp.plotCountry("KR")
   
-  cp.plotCountry("AU")
-  cp.plotCountry("IS")
-  cp.plotCountry("MX")
+#  cp.plotCountry("AT")
+#  cp.plotCountry("CA")
   
-  cp.plotCountry("PH")
+#  cp.plotCountry("LU")
+#  cp.plotCountry("PE")
+#  cp.plotCountry("IE")
+  
+#  cp.plotCountry("TH")
+#  cp.plotCountry("RO")
+#  cp.plotCountry("ID")
